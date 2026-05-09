@@ -73,7 +73,7 @@ PaySim CSV (494 MB, ~6.3M rows)
 ---
 
 ## 🗄 Data Modeling (Star Schema)
-
+```
 erDiagram
     FACT_TRANSACTIONS {
         string TRANSACTION_ID PK
@@ -107,7 +107,7 @@ erDiagram
     FACT_TRANSACTIONS }|--|| DIM_ACCOUNT : "Dest_Account"
     FACT_TRANSACTIONS }|--|| DIM_TIME : "Time"
     FACT_TRANSACTIONS }|--|| DIM_TYPE : "Type"
-
+```
 The Gold layer implements a **dimensional Star Schema** optimized for analytical queries on financial transaction data.
 
 ### Dimension Tables
