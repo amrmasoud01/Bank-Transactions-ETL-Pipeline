@@ -73,7 +73,7 @@ PaySim CSV (494 MB, ~6.3M rows)
 ---
 
 ## 🗄 Data Modeling (Star Schema)
-```
+```mermaid
 erDiagram
     FACT_TRANSACTIONS {
         string TRANSACTION_ID PK
