@@ -1,34 +1,8 @@
 """
 load.py — Gold Layer → Snowflake (Atomic Swap + Idempotent Append)
 ====================================================================
-Purpose:
-    Loads the Gold Star Schema from HDFS into Snowflake using the official
-    Snowflake Spark Connector.
 
-    DIMENSIONS (dim_account, dim_type, dim_time):
-        Atomic Swap pattern for zero-downtime deployment:
-        1. Write data to a _TEMP staging table
-        2. ALTER TABLE ... SWAP WITH ... (atomic metadata-only operation)
-        3. DROP the old table (now renamed to _TEMP)
-
-    FACT TABLE (fact_transactions):
-        Idempotent Incremental Append:
-        1. Query the current high-water mark (MAX ingestion_timestamp)
-        2. Filter Gold data to only rows AFTER the high-water mark
-        3. Append net-new rows — safe for retries (no duplicates)
-
-Anti-patterns avoided:
-    ✅ Atomic Swap — zero downtime for dimension refreshes
-    ✅ High-water mark — idempotent incremental fact loading
-    ✅ No TRUNCATE + reload — prevents data loss windows
-    ✅ Snowflake Spark Connector — no CSV intermediate step
-    ✅ Credentials from environment variables — no hardcoded secrets
-
-Run via:
-    spark-submit --packages net.snowflake:spark-snowflake_2.12:2.16.0-spark_3.4 \\
-        /home/jovyan/work/load.py
 """
-
 import os
 import sys
 from pyspark.sql import SparkSession, DataFrame

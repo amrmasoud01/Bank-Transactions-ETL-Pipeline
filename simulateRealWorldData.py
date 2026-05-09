@@ -28,7 +28,7 @@ Anti-patterns avoided:
     ✅ Heartbeat cycle — synchronized with Airflow to prevent race conditions
 
 Usage:
-    python simulateRealWorldData.py
+    python3 simulateRealWorldData.py
 """
 
 import pandas as pd

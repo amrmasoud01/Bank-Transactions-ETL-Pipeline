@@ -1,13 +1,6 @@
 # =============================================================================
 # docker-compose.yml — Production-Ready Infrastructure Orchestration
 # =============================================================================
-# Anti-patterns fixed:
-#   ✅ No runtime pip installs (dependencies baked into Dockerfile.spark)
-#   ✅ No _PIP_ADDITIONAL_REQUIREMENTS in Airflow (Spark handles Snowflake)
-#   ✅ spark-jupyter uses build: instead of image: for immutable builds
-#   ✅ Clean command: only starts the notebook server
-# =============================================================================
-
 # ---------------------------------------------------------------------------
 # Airflow common configuration (anchor for YAML reuse)
 # ---------------------------------------------------------------------------

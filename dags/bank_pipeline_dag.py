@@ -8,16 +8,6 @@ Purpose:
         Task 3: Transform (Bronze → Gold Star Schema)
         Task 4: Load (Gold → Snowflake via spark-submit)
 
-    NOTE: HDFS safe-mode handling is delegated to the infra-setup
-          Docker service (separation of concerns).
-
-Anti-patterns avoided:
-    ✅ No `|| true` — failures propagate and trigger retries/alerts
-    ✅ No runtime pip installs — Dockerfile.spark bakes all dependencies
-    ✅ Data Lifecycle Management — processed files are archived, never reprocessed
-    ✅ Logical retries with delay (retries=1, retry_delay=5 min)
-    ✅ Heartbeat sync — runs every 10 min, aligned with simulator sleep cycle
-    ✅ max_active_runs=1 — prevents overlapping DAG executions
 """
 
 from airflow import DAG

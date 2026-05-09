@@ -1,19 +1,6 @@
 """
 extract.py — Landing Zone → Bronze Layer (Incremental Load)
 =============================================================
-Purpose:
-    Reads NEW JSONL micro-batches from the streaming landing zone, enforces
-    a strict PySpark schema, adds an ingestion_timestamp for data lineage,
-    and writes to the HDFS Bronze layer as Parquet.
-
-Anti-patterns avoided:
-    ✅ mode("overwrite") — idempotent, fully rebuilt Bronze layer
-    ✅ Strict StructType schema — rejects malformed rows at read time
-    ✅ Ingestion timestamp — full data lineage from landing → Bronze
-    ✅ Reads only new JSONL files (Airflow archives processed files afterward)
-
-Run via:
-    spark-submit /home/jovyan/work/extract.py
 """
 
 import os

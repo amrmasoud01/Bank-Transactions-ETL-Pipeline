@@ -1,22 +1,6 @@
 """
 transform.py — Bronze → Gold (Star Schema Transformation)
 ============================================================
-Purpose:
-    Reads the append-only Bronze Parquet from HDFS and builds a complete
-    Star Schema in the Gold layer:
-        • dim_time     — Static date dimension with advanced attributes
-        • dim_account  — Unique accounts from origin + destination (Role-Playing)
-        • dim_type     — Distinct transaction types
-        • fact_transactions — Measures with surrogate FK references
-
-Anti-patterns avoided:
-    ✅ Gold is fully rebuilt from Bronze each run (idempotent, no duplicates)
-    ✅ Role-Playing Dimension for origin/destination accounts
-    ✅ monotonically_increasing_id() for integer surrogate keys
-    ✅ dim_time generated with year, month, day, day_of_week, weekend_flag
-
-Run via:
-    spark-submit /home/jovyan/work/transform.py
 """
 
 import os
