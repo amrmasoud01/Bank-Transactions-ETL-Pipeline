@@ -74,7 +74,39 @@ PaySim CSV (494 MB, ~6.3M rows)
 
 ## 🗄 Data Modeling (Star Schema)
 
-![Database Schema](./Images/Database_Diagram_(ERD).webp)
+erDiagram
+    FACT_TRANSACTIONS {
+        string TRANSACTION_ID PK
+        string ORIG_ACCOUNT_ID FK
+        string DEST_ACCOUNT_ID FK
+        int TIME_ID FK
+        int TYPE_ID FK
+        float AMOUNT
+        float OLD_BALANCE_ORG
+        float NEW_BALANCE_ORG
+        float OLD_BALANCE_DEST
+        float NEW_BALANCE_DEST
+        boolean ISFRAUD
+    }
+    DIM_ACCOUNT {
+        string ACCOUNT_ID PK
+    }
+    DIM_TIME {
+        int TIME_ID PK
+        int YEAR
+        int MONTH
+        int DAY
+        int HOUR
+    }
+    DIM_TYPE {
+        int TYPE_ID PK
+        string TYPE
+    }
+
+    FACT_TRANSACTIONS }|--|| DIM_ACCOUNT : "Orig_Account"
+    FACT_TRANSACTIONS }|--|| DIM_ACCOUNT : "Dest_Account"
+    FACT_TRANSACTIONS }|--|| DIM_TIME : "Time"
+    FACT_TRANSACTIONS }|--|| DIM_TYPE : "Type"
 
 The Gold layer implements a **dimensional Star Schema** optimized for analytical queries on financial transaction data.
 
