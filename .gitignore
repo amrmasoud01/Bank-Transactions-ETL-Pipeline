@@ -1,0 +1,77 @@
+# =============================================================================
+# .gitignore — Bank Transactions ETL Pipeline
+# =============================================================================
+# Stack: Python · Apache Airflow · PySpark · Pandas · Docker · Snowflake
+# =============================================================================
+
+# ── Environment & Secrets ─────────────────────────────────────────────────
+# Credentials for Snowflake, databases, and API keys.
+# Only the .env.template (with placeholder values) should be committed.
+.env
+.env.*
+!.env.template
+
+# ── Large Data Files ──────────────────────────────────────────────────────
+# The data/ directory contains the ~494 MB PaySim CSV, JSONL micro-batches,
+# checkpoint state, and local Gold-layer exports. None of this belongs in Git.
+data/
+
+# Catch any stray data files outside the data/ directory
+*.csv
+*.jsonl
+*.parquet
+
+# ── Python Artifacts ──────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Type checker / linter caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# ── Airflow ───────────────────────────────────────────────────────────────
+logs/
+airflow-webserver.pid
+airflow.db
+airflow.cfg
+webserver_config.py
+airflow-worker.pid
+
+# ── Docker ────────────────────────────────────────────────────────────────
+# Ignore any override files that customize the local dev stack
+docker-compose.override.yml
+.docker/
+
+# ── IDE & OS ──────────────────────────────────────────────────────────────
+# VS Code
+.vscode/
+
+# JetBrains (PyCharm, IntelliJ)
+.idea/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Linux
+*~

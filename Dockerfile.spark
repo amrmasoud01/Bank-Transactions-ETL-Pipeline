@@ -1,0 +1,22 @@
+# =============================================================================
+# Dockerfile.spark — Immutable Spark + Jupyter Image
+# =============================================================================
+# Purpose: Bake ALL Python dependencies into the image at build time.
+#          This eliminates runtime pip installs (an anti-pattern that causes
+#          non-deterministic builds, cold-start delays, and silent failures).
+#
+# Usage:   Referenced by docker-compose.yml → spark-jupyter service
+#          docker compose build spark-jupyter
+# =============================================================================
+
+FROM jupyter/pyspark-notebook:x86_64-spark-3.5.0
+
+# Switch to root for system-level package installation
+USER root
+
+# Install the Snowflake connector with pandas extras.
+# --no-cache-dir keeps the image layer small by discarding the pip cache.
+RUN pip install --no-cache-dir snowflake-connector-python[pandas]
+
+# Switch back to the default notebook user for runtime security
+USER ${NB_UID}
