@@ -91,31 +91,35 @@ def _get_sf_options() -> dict:
     }
 
 
-def _atomic_swap_dimension(
+def _upsert_dimension(
     spark: SparkSession,
     df: DataFrame,
     table_name: str,
+    pk_column: str,
     sf_options: dict,
 ) -> None:
     """
-    Atomic Swap pattern for dimension tables (zero-downtime refresh).
+    MERGE-based upsert for dimension tables.
+
+    Writes the incoming DataFrame to a staging table, then executes a
+    MERGE INTO ... WHEN NOT MATCHED THEN INSERT to append only genuinely
+    new dimension rows.  This preserves historical data across incremental
+    micro-batch loads.
     """
-    temp_table = f"{table_name}_TEMP"
+    stage_table = f"{table_name}_STAGE"
 
-    print(f"[Load] Atomic Swap: Writing to staging table {temp_table}...")
+    print(f"[Load] Upsert: Writing to staging table {stage_table}...")
 
-    # Step 1: Write the full dimension to the TEMP table
+    # Step 1: Write the current batch to the staging table
     (
         df.write.format("net.snowflake.spark.snowflake")
         .options(**sf_options)
-        .option("dbtable", temp_table)
+        .option("dbtable", stage_table)
         .mode("overwrite")
         .save()
     )
 
-    # Step 2 & 3: SWAP and cleanup
-    print(f"[Load] Atomic Swap: Executing SWAP {table_name} ↔ {temp_table}...")
-
+    # Step 2: MERGE new rows into the production table
     import snowflake.connector
 
     conn = snowflake.connector.connect(
@@ -128,20 +132,36 @@ def _atomic_swap_dimension(
     )
     cursor = conn.cursor()
     try:
-        # Ensure the production table exists for SWAP to work
-        cursor.execute(f"CREATE TABLE IF NOT EXISTS {table_name} LIKE {temp_table}")
+        # Ensure the production table exists (mirrors staging schema)
+        cursor.execute(
+            f"CREATE TABLE IF NOT EXISTS {table_name} LIKE {stage_table}"
+        )
 
-        # Atomic swap: instantaneous metadata-only operation
-        cursor.execute(f"ALTER TABLE {table_name} SWAP WITH {temp_table}")
-        print(f"[Load] Atomic Swap: ✅ {table_name} swapped successfully.")
+        # Dynamically fetch column names from the staging table
+        cursor.execute(f"SHOW COLUMNS IN TABLE {stage_table}")
+        columns = [row[2] for row in cursor.fetchall()]  # column_name is index 2
 
-        # Drop the old data (now in _TEMP after the swap)
-        cursor.execute(f"DROP TABLE IF EXISTS {temp_table}")
-        print(f"[Load] Atomic Swap: Cleaned up {temp_table}.")
+        cols_csv = ", ".join(columns)
+        source_cols_csv = ", ".join(f"SOURCE.{c}" for c in columns)
+
+        merge_sql = (
+            f"MERGE INTO {table_name} TARGET "
+            f"USING {stage_table} SOURCE "
+            f"ON TARGET.{pk_column} = SOURCE.{pk_column} "
+            f"WHEN NOT MATCHED THEN INSERT ({cols_csv}) "
+            f"VALUES ({source_cols_csv})"
+        )
+
+        print(f"[Load] Upsert: Executing MERGE into {table_name}...")
+        cursor.execute(merge_sql)
+        print(f"[Load] Upsert: ✅ {table_name} merged successfully.")
+
+        # Step 3: Drop the staging table
+        cursor.execute(f"DROP TABLE IF EXISTS {stage_table}")
+        print(f"[Load] Upsert: Cleaned up {stage_table}.")
     except Exception as e:
-        # Rollback: drop the temp table if swap fails
-        print(f"[Load] Atomic Swap: ❌ SWAP failed for {table_name}: {e}")
-        cursor.execute(f"DROP TABLE IF EXISTS {temp_table}")
+        print(f"[Load] Upsert: ❌ MERGE failed for {table_name}: {e}")
+        cursor.execute(f"DROP TABLE IF EXISTS {stage_table}")
         raise
     finally:
         cursor.close()
@@ -220,23 +240,23 @@ def load_gold_to_snowflake() -> None:
     sf_options = _get_sf_options()
 
     # ==================================================================
-    # PHASE 1: DIMENSIONS — Atomic Swap (Zero-Downtime Refresh)
+    # PHASE 1: DIMENSIONS — MERGE Upsert (Preserves Historical Data)
     # ==================================================================
     print("\n" + "=" * 60)
-    print("[Load] PHASE 1: Loading Dimensions (Atomic Swap)")
+    print("[Load] PHASE 1: Loading Dimensions (MERGE Upsert)")
     print("=" * 60)
 
     # ── dim_account ──
     dim_account = spark.read.parquet(gold_path + "dim_account/")
-    _atomic_swap_dimension(spark, dim_account, "DIM_ACCOUNT", sf_options)
+    _upsert_dimension(spark, dim_account, "DIM_ACCOUNT", "ACCOUNT_ID", sf_options)
 
     # ── dim_type ──
     dim_type = spark.read.parquet(gold_path + "dim_type/")
-    _atomic_swap_dimension(spark, dim_type, "DIM_TYPE", sf_options)
+    _upsert_dimension(spark, dim_type, "DIM_TYPE", "TYPE_ID", sf_options)
 
     # ── dim_time ──
     dim_time = spark.read.parquet(gold_path + "dim_time/")
-    _atomic_swap_dimension(spark, dim_time, "DIM_TIME", sf_options)
+    _upsert_dimension(spark, dim_time, "DIM_TIME", "TIME_ID", sf_options)
 
     # ==================================================================
     # PHASE 2: FACT TABLE — Idempotent Incremental Append
