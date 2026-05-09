@@ -1,5 +1,16 @@
 # 🏦 Bank Transactions ETL Pipeline
 
+<div align="center">
+
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Apache Airflow](https://img.shields.io/badge/Airflow-017CEE?style=for-the-badge&logo=Apache%20Airflow&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)
+![Apache Spark](https://img.shields.io/badge/Apache%20Spark-E25A1C?style=for-the-badge&logo=Apache%20Spark&logoColor=white)
+![Pandas](https://img.shields.io/badge/Pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)
+![Snowflake](https://img.shields.io/badge/snowflake-29B5E8?style=for-the-badge&logo=snowflake&logoColor=white)
+
+</div>
+
 A **production-grade, end-to-end data engineering pipeline** that ingests ~6.3 million simulated streaming bank transactions from the [PaySim](https://www.kaggle.com/datasets/ealaxi/paysim1) dataset, processes them through a medallion architecture (Landing → Bronze → Gold), and loads the final **Star Schema** into a **Snowflake Data Warehouse** — all orchestrated by **Apache Airflow** and executed via **Apache Spark**.
 
 The pipeline is fully containerized with **Docker Compose** and implements several advanced engineering patterns including **stateful crash-resilient simulation**, **time-based decoupling** between the producer and consumer, **atomic swap deployments** to Snowflake, and **idempotent incremental fact loading** via a high-water mark.
