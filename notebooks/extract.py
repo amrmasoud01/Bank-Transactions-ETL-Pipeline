@@ -4,10 +4,10 @@ extract.py — Landing Zone → Bronze Layer (Incremental Load)
 Purpose:
     Reads NEW JSONL micro-batches from the streaming landing zone, enforces
     a strict PySpark schema, adds an ingestion_timestamp for data lineage,
-    and appends to the HDFS Bronze layer as Parquet.
+    and writes to the HDFS Bronze layer as Parquet.
 
 Anti-patterns avoided:
-    ✅ mode("append") — never overwrites historical Bronze data
+    ✅ mode("overwrite") — idempotent, fully rebuilt Bronze layer
     ✅ Strict StructType schema — rejects malformed rows at read time
     ✅ Ingestion timestamp — full data lineage from landing → Bronze
     ✅ Reads only new JSONL files (Airflow archives processed files afterward)
@@ -35,7 +35,7 @@ os.environ["HADOOP_USER_NAME"] = "root"
 def extract_landing_to_bronze() -> None:
     """
     Read JSONL files from the streaming landing zone, enforce schema,
-    add lineage metadata, and append to the HDFS Bronze layer.
+    add lineage metadata, and write to the HDFS Bronze layer.
     """
 
     spark = SparkSession.builder \
@@ -46,8 +46,8 @@ def extract_landing_to_bronze() -> None:
     # ── Paths ──
     # Landing zone: JSONL files written by the simulator
     input_path = "file:///home/jovyan/data/streaming_landing_zone/*.jsonl"
-    # Bronze layer: append-only Parquet in HDFS
-    output_path = "hdfs://hadoop-namenode:9000/user/root/datalake/bronze/"
+    # Bronze layer: Parquet in HDFS
+    output_path = "hdfs://hadoop-namenode:9000/bronze_layer"
 
     # ── Strict schema definition for PaySim dataset + event_timestamp ──
     # This rejects any rows that don't conform, preventing corrupt data
@@ -86,11 +86,10 @@ def extract_landing_to_bronze() -> None:
     # event_timestamp which records when the event "occurred").
     df_with_lineage = df.withColumn("ingestion_timestamp", current_timestamp())
 
-    # ── Append to Bronze layer as Parquet ──
-    # mode("append") ensures we NEVER overwrite historical data.
-    # Each pipeline run adds a new set of Parquet partition files.
-    print(f"[Extract] Appending to Bronze layer: {output_path}")
-    df_with_lineage.write.mode("append").parquet(output_path)
+    # ── Write to Bronze layer as Parquet ──
+    # mode("overwrite") ensures an idempotent, fully rebuilt Bronze layer.
+    print(f"[Extract] Writing to Bronze layer: {output_path}")
+    df_with_lineage.write.mode("overwrite").parquet(output_path)
 
     print(f"[Extract] ✅ Successfully ingested {row_count:,} rows into Bronze.")
     spark.stop()

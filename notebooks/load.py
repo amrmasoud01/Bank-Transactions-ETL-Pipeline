@@ -242,7 +242,7 @@ def load_gold_to_snowflake() -> None:
         .master("local[*]") \
         .getOrCreate()
 
-    gold_path = "hdfs://hadoop-namenode:9000/user/root/datalake/gold/"
+    gold_path = "hdfs://hadoop-namenode:9000/gold_layer/"
     sf_options = _get_sf_options()
 
     # ==================================================================

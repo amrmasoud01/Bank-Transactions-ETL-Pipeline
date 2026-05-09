@@ -48,8 +48,8 @@ def transform_bronze_to_gold() -> None:
         .getOrCreate()
 
     # ── Paths ──
-    bronze_path = "hdfs://hadoop-namenode:9000/user/root/datalake/bronze/"
-    gold_path = "hdfs://hadoop-namenode:9000/user/root/datalake/gold/"
+    bronze_path = "hdfs://hadoop-namenode:9000/bronze_layer"
+    gold_path = "hdfs://hadoop-namenode:9000/gold_layer/"
 
     print(f"[Transform] Reading Bronze layer from: {bronze_path}")
     df = spark.read.parquet(bronze_path)
