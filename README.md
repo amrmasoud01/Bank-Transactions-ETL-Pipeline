@@ -8,7 +8,7 @@ The pipeline is fully containerized with **Docker Compose** and implements sever
 
 ## 📐 Architecture
 
-![Architecture Diagram](./images/architecture_diagram.png)
+![Architecture Diagram](./images/Bank_transactions_ETL_pipeline_Architecture.webp)
 
 ### Data Flow
 
@@ -74,7 +74,7 @@ PaySim CSV (494 MB, ~6.3M rows)
 
 ## 🗄 Data Modeling (Star Schema)
 
-![Database Schema](./images/schema_diagram.png)
+![Database Schema](./images/Database_Diagram_(ERD).webp)
 
 The Gold layer implements a **dimensional Star Schema** optimized for analytical queries on financial transaction data.
 
